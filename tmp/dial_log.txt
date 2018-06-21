@@ -1,0 +1,153 @@
+06-20 16:41:37.130  2068  2068 D RILJ    : [9928]> DIAL [SUB0]
+06-20 16:41:37.323  2068  2206 D RILJ    : [9928]< DIAL  [SUB0]
+06-20 16:41:37.962  2068  2206 D RILJ    : [9938]< GET_CURRENT_CALLS {[id=1,DIALING,toa=129,norm,mo,0,voc,noevp,,cli=1,,3] } [SUB0]
+06-20 16:41:38.000  2068  2206 D RILJ    : [9941]< GET_CURRENT_CALLS {[id=1,DIALING,toa=129,norm,mo,0,voc,noevp,,cli=1,,3] } [SUB0]
+06-20 16:41:39.573  2068  2206 D RILJ    : [0008]< GET_CURRENT_CALLS {[id=1,ACTIVE,toa=129,norm,mo,0,voc,noevp,,cli=1,,3] } [SUB0]
+06-20 16:41:39.625  2068  2206 D RILJ    : [0011]< GET_CURRENT_CALLS {[id=1,ACTIVE,toa=129,norm,mo,0,voc,noevp,,cli=1,,3] } [SUB0]
+06-20 16:41:45.290  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_INFO_REC com.android.internal.telephony.cdma.CdmaInformationRecords@6b0f9d3 [SUB0]
+06-20 16:41:45.291  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_INFO_REC CdmaLineControlInfoRec: { lineCtrlPolarityIncluded: 1 lineCtrlToggle: 0 lineCtrlReverse: 0 lineCtrlPowerDenial: 0 } [SUB0]
+06-20 16:41:58.856  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_CALL_WAITING com.android.internal.telephony.cdma.CdmaCallWaitingNotification@98a3435Call Waiting Notification   number: 18575666564 numberPresentation: 1 name:  namePresentation: 1 numberType: 2 numberPlan: 1 isPresent: 0 signalType: 0 alertPitch: 0 signal: 0 [SUB0]
+06-20 16:41:58.879  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_INFO_REC com.android.internal.telephony.cdma.CdmaInformationRecords@1be90ca [SUB0]
+06-20 16:41:58.879  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_INFO_REC CdmaNumberInfoRec: { id: RIL_CDMA_DISPLAY_INFO_REC, number: <MASKED>, numberType: 2, numberPlan: 1, pi: 0, si: 3 } [SUB0]
+06-20 16:41:59.035  2068  2206 D RILJ    : [0331]< GET_CURRENT_CALLS {[id=1,ACTIVE,toa=129,norm,mo,0,voc,noevp,,cli=1,,3] } [SUB0]
+06-20 16:42:02.063  2068  2068 D RILJ    : [0395]> RIL_REQUEST_CDMA_FLASH featureCode =  [SUB0]
+06-20 16:42:02.108  2068  2206 D RILJ    : [0395]< RIL_REQUEST_CDMA_FLASH  [SUB0]
+06-20 16:42:07.323  2068  2068 D RILJ    : [0474]> RIL_REQUEST_CDMA_FLASH featureCode =  [SUB0]
+06-20 16:42:07.457  2068  2206 D RILJ    : [0474]< RIL_REQUEST_CDMA_FLASH  [SUB0]
+06-20 16:42:29.182  2068  2206 D RILJ    : [0743]< GET_CURRENT_CALLS {} [SUB0]
+06-20 16:42:29.241  2068  2206 D RILJ    : [0755]< LAST_CALL_FAIL_CAUSE com.android.internal.telephony.LastCallFailCause@1d8a20f causeCode: 16 vendorCause: Normal call clearing [SUB0]
+
+--------------------
+
+创建新的GsmCdmaConnection对象，并添加到mRingingCall中，然后将mRingingCall的状态设置为WAITING；
+GsmCdmaCallTracker的mState更新为RINGING；
+通知phone.registerForCallWaiting的监听者
+
+06-20 16:41:58.856  2068  2206 D RILJ    : [UNSL]< UNSOL_CDMA_CALL_WAITING com.android.internal.telephony.cdma.CdmaCallWaitingNotification@98a3435Call Waiting Notification   number: 18575666564 numberPresentation: 1 name:  namePresentation: 1 numberType: 2 numberPlan: 1 isPresent: 0 signalType: 0 alertPitch: 0 signal: 0 [SUB0]
+06-20 16:41:58.856  2068  2068 D GsmCdmaConnection: [GsmCdmaConn] acquireWakeLock
+06-20 16:41:58.861  2068  2068 D GsmCdmaCallTracker: [GsmCdmaCallTracker] update phone state, old=OFFHOOK new=RINGING
+06-20 16:41:58.862  2068  2068 D GSM     : mTestAddress: null
+06-20 16:41:58.863  1440  2825 D TelephonyRegistry: notifyCallStateForPhoneId: subId=4 state=1 incomingNumber=18575666564
+06-20 16:41:58.865  1440  2825 D TelephonyRegistry: validatePhoneId: true
+06-20 16:41:58.865  1440  2825 D TelephonyRegistry: handleRemoveListLocked: mRemoveList.size()=0
+06-20 16:41:58.866  2068  2068 D GsmCdmaCallTracker: Event EVENT_CALL_WAITING_INFO_CDMA Received
+
+
+phone.registerForCallWaiting的监听者之一是PstnIncomingCallNotifier，它将来电号码、handle等关键信息使用TelecomManager.addNewIncomingCall添加新Call
+06-20 16:41:58.944  2068  2068 D Telephony: TelephonyConnectionService: createConnection, callManagerAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0}, callId: TC@11_1, request: ConnectionRequest tel:18575666564 Bundle[mParcelledData.dataSize=496], isIncoming: true, isUnknown: false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.944  2068  2068 I Telephony: TelephonyConnectionService: onCreateIncomingConnection, request: ConnectionRequest tel:18575666564 Bundle[mParcelledData.dataSize=496]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+
+
+TelecomManager.addNewIncomingCall --> 
+TelecomServiceImpl.mBinderImpl.addNewIncomingCall --> CallIntentProcessor.AdapterImpl.processIncomingCallIntent --> CallIntentProcessor.processIncomingCallIntent --> CallsManager.processIncomingCallIntent -->
+06-20 16:41:58.879  1440  2825 D Telecom : Logging: START_SESSION
+06-20 16:41:58.880  1440  2825 I Telecom : : Adding new incoming call with phoneAccountHandle ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0}: TSI.aNIC@A6U
+06-20 16:41:58.907  1440  2825 I Telecom : PhoneAccountRegistrar: SimCallManager queried, returning: null: TSI.aNIC@A6U
+06-20 16:41:58.911  1440  2825 D Telecom : Class: Processing incoming call from connection service [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}]: TSI.aNIC@A6U
+06-20 16:41:58.911  1440  2825 D Telecom : CallsManager: processIncomingCallIntent: TSI.aNIC@A6U
+06-20 16:41:58.919  1440  2825 V Telecom : Call: Looking up information for: 18575666564.: TSI.aNIC@A6U
+06-20 16:41:58.926  1440  2825 D Telecom : Call: maybeLoadCannedSmsResponses: doing nothing: TSI.aNIC@A6U
+06-20 16:41:58.926  1440  2825 V Telecom : Call: setConnectionProperties: [Properties:]: TSI.aNIC@A6U
+06-20 16:41:58.927  1440  2825 D Telecom : TelecomAnalytics: Starting analytics for call TC@11: TSI.aNIC@A6U
+06-20 16:41:58.927  1440  2825 I Telecom : LogUtils: EventRecord added as Call: [TC@11, NEW, null, tel:18575666564, A, childs(0), has_parent(false), [Capabilities:], [Properties:]]: TSI.aNIC@A6U
+06-20 16:41:58.927  1440  2825 I Telecom : Event: RecordEntry TC@11: CREATED, null: TSI.aNIC@A6U
+06-20 16:41:58.928  1440  2825 D Telecom : TelecomAnalytics: setting isInterrupted for call TC@10 to true: TSI.aNIC@A6U
+06-20 16:41:58.928  1440  2825 D Telecom : TelecomAnalytics: setting isAdditional for call TC@11 to true: TSI.aNIC@A6U
+
+
+Call.startCreateConnection --> CreateConnectionProcessor.process --> CreateConnectionProcessor.attemptNextPhoneAccount
+06-20 16:41:58.928  1440  2825 V Telecom : CreateConnectionProcessor: CreateConnectionProcessor created for Call = [TC@11, NEW, null, tel:18575666564, A, childs(0), has_parent(false), [Capabilities:], [Properties:]]: TSI.aNIC@A6U
+06-20 16:41:58.929  1440  2825 V Telecom : CreateConnectionProcessor: process: TSI.aNIC@A6U
+06-20 16:41:58.939  1440  2825 I Telecom : PhoneAccountRegistrar: SimCallManager queried, returning: null: TSI.aNIC@A6U
+06-20 16:41:58.939  1440  2825 V Telecom : CreateConnectionProcessor: setConnectionManager, not changing: TSI.aNIC@A6U
+06-20 16:41:58.939  1440  2825 V Telecom : CreateConnectionProcessor: attemptNextPhoneAccount: TSI.aNIC@A6U
+06-20 16:41:58.939  1440  2825 I Telecom : CreateConnectionProcessor: Trying attempt CallAttemptRecord(ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0},ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0}): TSI.aNIC@A6U
+06-20 16:41:58.940  1440  2825 V Telecom : ConnectionServiceWrapper: Call count increment 2, com.android.phone/com.android.services.telephony.TelephonyConnectionService: TSI.aNIC@A6U
+06-20 16:41:58.940  1440  2825 D Telecom : TelecomAnalytics: setting connection service for call TC@11: com.android.phone/com.android.services.telephony.TelephonyConnectionService: TSI.aNIC@A6U
+
+
+ConnectionServiceWrapper.createConnection --> ServiceBinder.Binder2.bind --> 
+ServiceBinder.ServiceBinderConnection.onServiceConnected --> ServiceBinder.handleSuccessfulConnection --> ConnectionServiceWrapper.createConnection.callback.onSuccess
+06-20 16:41:58.940  1440  2825 D Telecom : ConnectionServiceWrapper: createConnection([TC@11, NEW, com.android.phone/com.android.services.telephony.TelephonyConnectionService, tel:18575666564, A, childs(0), has_parent(false), [Capabilities:], [Properties:]]) via ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}.: TSI.aNIC@A6U
+06-20 16:41:58.940  1440  2825 D Telecom : ConnectionServiceWrapper: bind(): TSI.aNIC@A6U
+06-20 16:41:58.940  1440  2825 D Telecom : ConnectionServiceWrapper: Service is already bound.: TSI.aNIC@A6U
+06-20 16:41:58.941  1440  2825 I Telecom : Event: RecordEntry TC@11: START_CONNECTION, tel:18575666564: TSI.aNIC@A6U
+06-20 16:41:58.942  1440  2825 V Telecom : Logging: END_SUBSESSION (dur: 63 mS): TSI.aNIC@A6U
+06-20 16:41:58.942  1440  2825 D Telecom : Logging: END_SESSION (dur: 63 ms): TSI.aNIC@A6U
+
+
+TelephonyConnectionService.mBinder.createConnection --> TelephonyConnectionService.createConnection --> TelephonyConnectionService.onCreateIncomingConnection --> TelephonyConnectionService.createConnectionFor
+06-20 16:41:58.942  2068  2540 D Telephony: Logging: START_EXTERNAL_SESSION
+06-20 16:41:58.943  2068  2540 V Telephony: Logging: CREATE_SUBSESSION (TSI.aNIC)->TSI.aNIC@E-A6U_0: (TSI.aNIC)@E-A6U
+06-20 16:41:58.943  2068  2540 V Telephony: Logging: CONTINUE_SUBSESSION: (TSI.aNIC)->CS.crCo@E-A6U_0
+06-20 16:41:58.943  2068  2540 V Telephony: Logging: CREATE_SUBSESSION (TSI.aNIC)->CS.crCo->CS.crCo@E-A6U_0_0: (TSI.aNIC)->CS.crCo@E-A6U_0
+06-20 16:41:58.943  2068  2540 V Telephony: Logging: END_SUBSESSION (dur: 0 mS): (TSI.aNIC)->CS.crCo@E-A6U_0
+06-20 16:41:58.944  2068  2068 V Telephony: Logging: CONTINUE_SUBSESSION: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.944  2068  2068 D Telephony: TelephonyConnectionService: createConnection, callManagerAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0}, callId: TC@11_1, request: ConnectionRequest tel:18575666564 Bundle[mParcelledData.dataSize=496], isIncoming: true, isUnknown: false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.944  2068  2068 I Telephony: TelephonyConnectionService: onCreateIncomingConnection, request: ConnectionRequest tel:18575666564 Bundle[mParcelledData.dataSize=496]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+
+
+CdmaConnection --> TelephonyConnection --> TelephonyConnection.setOriginalConnection --> TelephonyConnection.fireOnOriginalConnectionConfigured
+06-20 16:41:58.947  2068  2068 V Telephony: CdmaConnection: new TelephonyConnection, originalConnection:  callId: null isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.950  2068  2068 I Telephony: CdmaConnection: isAddParticipantCapable: isCapable = false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.951  2068  2068 V Telephony: CdmaConnection: updateAddress, address changed: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.951  2068  2068 D Telephony: CdmaConnection: setAddress tel:18575666564: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.953  2068  2068 V Telephony: CdmaConnection: updateAddress, caller display name changed: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.954  2068  2068 D Telephony: CdmaConnection: setCallerDisplayName : (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.961  2068  2068 V Telephony: CdmaConnection: refreshConferenceSupported : isConfSupp=true, isImsConfSupp=true, isVidConfSupp=true, isMergeOfWifiAllowed=true, isWifi=false, isVoWifiEnabled=false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.961  2068  2068 D Telephony: CdmaConnection: refreshConferenceSupported = true.: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.961  2068  2068 D Telephony: CdmaConnection: setVideoState 0: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.962  2068  2068 I Telephony: CdmaConnection: isAddParticipantCapable: isCapable = false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.962  2068  2068 V Telephony: CdmaConnection: isValidRingingCall, returning true: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.967  2068  2068 V Telephony: CdmaConnection: Update state from IDLE to WAITING for [TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:NEW capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.967  2068  2068 D Telephony: CdmaConnection: setState: RINGING: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.967  2068  2068 V Telephony: CdmaConnection: onStateChanged, state: RINGING: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.969  2068  2068 V Telephony: CdmaConnection: isValidRingingCall, returning true: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.970  2068  2068 V Telephony: CdmaConnection: isValidRingingCall, returning true: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.970  2068  2068 I Telephony: CdmaConnection: isAddParticipantCapable: isCapable = false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.970  2068  2068 I Telephony: CdmaConnection: isAddParticipantCapable: isCapable = false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.977  2068  2068 V Telephony: CdmaConnection: refreshConferenceSupported : isConfSupp=true, isImsConfSupp=true, isVidConfSupp=true, isMergeOfWifiAllowed=true, isWifi=false, isVoWifiEnabled=false: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.977  2068  2068 D Telephony: CdmaConnection: refreshConferenceSupported = true.: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+
+
+TelephonyConnectionService.mTelephonyConnectionListener.onOriginalConnectionConfigured --> TelephonyConnectionService.addConnectionToConferenceController --> CdmaConferenceController.addInternal --> CdmaConferenceController.recalculateConference
+06-20 16:41:58.978  2068  2068 D Telephony: TelephonyConnectionService: Adding CDMA connection to conference controller: [TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:RINGING capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.978  2068  2068 D Telephony: TelephonyConferenceController: remove - connection not tracked; connection=[TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:RINGING capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.978  2068  2068 D Telephony: TelephonyConnectionService: Removing connection from IMS conference controller: [TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:RINGING capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.979  2068  2068 D Telephony: ImsConferenceController: remove - connection not tracked; connection=[TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:RINGING capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.981  2068  2068 D Telephony: CdmaConnection: updateExtras extras: null
+06-20 16:41:58.984  2068  2068 D Telephony: CdmaConferenceController: recalculating conference calls 1
+
+
+--> TelephonyConnectionService.createConnection.addConnection
+--> ConnectionServiceAdapter.handleCreateConnectionComplete --> ConnectionServiceWrapper.Adapter.handleCreateConnectionComplete --> 
+ConnectionServiceWrapper.handleCreateConnectionComplete --> CreateConnectionProcessor.handleCreateConnectionSuccess --> Call.handleCreateConnectionSuccess --> mListeners.onXXXCall --> CallsManager.onXXXCall
+06-20 16:41:58.980  2068  2068 D Telephony: TelephonyConnectionService: createConnection, connection: [TelephonyConnection objId:75326011 telecomCallID:TC@11_1 type:cdma state:RINGING capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO] properties:[Properties:] address:tel:18575666564 originalConnection: callId: TC@11_1 isExternal: N incoming: true state: WAITING post dial state: NOT_STARTED partOfConf:N confSupported:Y]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.980  2068  2068 V Telephony: TelephonyConnectionService: createConnection, number: 18575666564, state: RINGING, capabilities: [Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO], properties: [Properties:]: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.980  2068  2068 D Telephony: TelephonyConnectionService: createConnection, calling handleCreateConnectionSuccessful TC@11_1: (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.981  2068  2068 V Telephony: Logging: END_SUBSESSION (dur: 37 mS): (TSI.aNIC)->CS.crCo->H.CS.crCo@E-A6U_0_0
+06-20 16:41:58.981  2068  2068 D Telephony: Logging: END_SESSION (dur: 39 ms): (TSI.aNIC)@E-A6U
+06-20 16:41:58.983  1440  2765 D Telecom : Logging: START_EXTERNAL_SESSION
+06-20 16:41:58.984  1440  2765 V Telecom : Logging: CREATE_SUBSESSION ((TSI.aNIC)->CS.crCo->H.CS.crCo)->(TSI.aNIC)->CS.crCo->H.CS.crCo@E-E-A6U_0_0_0: ((TSI.aNIC)->CS.crCo->H.CS.crCo)@E-E-A6U_0_0
+06-20 16:41:58.984  1440  2765 V Telecom : Logging: CONTINUE_SUBSESSION: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.984  1440  2765 D Telecom : ConnectionServiceWrapper: ConnectionService -> Telecom[com.android.phone/com.android.services.telephony.TelephonyConnectionService]: handleCreateConnectionComplete TC@11_1: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.985  1440  2765 V Telecom : Call: handleCreateConnectionSuccessful ParcelableConnection [act:ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 89860318047560038191, UserHandle{0}], state:2, capabilities:[Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO], properties:[Properties:], extras:Bundle[mParcelledData.dataSize=104], parent:null: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.985  1440  2765 V Telecom : Call: setConnectionCapabilities: [Capabilities: CAPABILITY_CANNOT_DOWNGRADE_VIDEO_TO_AUDIO CAPABILITY_SPEED_UP_MT_AUDIO]: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.987  1440  2765 I Telecom : Event: RecordEntry TC@11: CAPABILITY_CHANGE, Current: [[ !v2a spd_aud]], Removed [[]], Added [[ !v2a spd_aud]]: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.987  1440  2765 V Telecom : Call: setConnectionProperties: [Properties:]: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.988  1440  2765 V Telecom : Call: setVideoProvider: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.988  1440  2765 D Telecom : Call: setVideoState: videoState=Audio Only defaulted to audio (video not supported): ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.989  1440  2765 D Telecom : TelecomAnalytics: adding callTechnology for call TC@11: 1: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.991  1440  2765 D Telecom : CallsManager: onSuccessfulIncomingCall: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.992  1440  2765 I Telecom : Event: RecordEntry TC@11: FILTERING_INITIATED, null: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.994  1440  2765 I Telecom : Event: RecordEntry TC@11: DIRECT_TO_VM_INITIATED, null: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.996  1440  2765 V Telecom : Logging: CREATE_SUBSESSION ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC->CSW.hCCC@E-E-A6U_0_0_0_0: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.997  1440  2765 V Telecom : Logging: CREATE_SUBSESSION ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC->CSW.hCCC@E-E-A6U_0_0_0_1: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:58.997  1440  2765 V Telecom : Logging: CREATE_SUBSESSION ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC->CSW.hCCC@E-E-A6U_0_0_0_2: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.000  1440  2765 I Telecom : Event: RecordEntry TC@11: SCREENING_SENT, null: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.002  1440  2765 I Telecom : CallScreeningServiceFilter: There are no call screening services installed on this device.: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.002  1440  2765 I Telecom : CallScreeningServiceFilter: Could not bind to call screening service: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.002  1440  2765 I Telecom : Event: RecordEntry TC@11: SCREENING_COMPLETED, [Allow, logged, notified]: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.003  1440  2765 V Telecom : Logging: CREATE_SUBSESSION ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC->CSW.hCCC@E-E-A6U_0_0_0_3: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.006  1440  2765 D Telecom : ConnectionServiceWrapper: Telecom -> ConnectionService[com.android.phone/com.android.services.telephony.TelephonyConnectionService]: createConnectionComplete TC@11_1: ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
+06-20 16:41:59.007  1440  2765 V Telecom : Logging: END_SUBSESSION (dur: 23 mS): ((TSI.aNIC)->CS.crCo->H.CS.crCo)->CSW.hCCC@E-E-A6U_0_0_0
