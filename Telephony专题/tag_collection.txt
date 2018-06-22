@@ -1,0 +1,137 @@
+# RIL
+\[([0-9]+|UNSL)\][<>] 
+
+# Stk
+\[([0-9]+|UNSL)\][<>] (REQUEST|UNSOL)\_STK|CommandParamsFactory: process|StkAppService: (\[Interactive\]\[in progress\]|cmdName\[|filter redundant cmds|\[handleCmd\]|RES)|CatService: (Running CAT service on Slotid|Service finalized|isResponse for last valid cmd)
+
+# SIM
+\[([0-9]+|UNSL)\]< (GET_SIM_STATUS)
+
+# Radio
+\[([0-9]+|UNSL)\]> (RADIO_POWER)|\[([0-9]+|UNSL)\]< (UNSOL_RESPONSE_RADIO_STATE_CHANGED)
+
+# Radio Tech
+\[([0-9]+|UNSL)\]< (UNSOL_VOICE_RADIO_TECH_CHANGED|RIL_REQUEST_VOICE_RADIO_TECH)|\[([0-9]+|UNSL)\]> (REQUEST_SET_PREFERRED_NETWORK_TYPE)|\[GsmCdmaPhone\] (phoneObjectUpdater: newVoiceRadioTech|Switching Voice Phone|Precise phone type|phoneObjectUpdater: No change ignore, newVoiceRadioTech)
+
+# ServiceState
+\[([0-9]+|UNSL)\]< (UNSOL_RESPONSE_NETWORK_STATE_CHANGED|OPERATOR|VOICE_REGISTRATION_STATE|DATA_REGISTRATION_STATE|QUERY_NETWORK_SELECTION_MODE|RIL_REQUEST_IMS_REGISTRATION_STATE)
+
+Broadcasting ServiceState :
+
+# Call
+\[([0-9]+|UNSL)\][<>] (DIAL|HANGUP|ANSWER|REQUEST_HOLD|REQUEST_RESUME|REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE|HANGUP_FOREGROUND_RESUME_BACKGROUND|RIL_REQUEST_CDMA_FLASH)|\[([0-9]+|UNSL)\]< (UNSOL_RESPONSE_CALL_STATE_CHANGED  |GET_CURRENT_CALLS|LAST_CALL_FAIL_CAUSE|UNSOL_CDMA_INFO_REC|UNSOL_SRVCC_STATE_NOTIFY|UNSOL_RINGBACK_TONE|UNSOL_RESPONSE_HANDOVER|UNSOL_CDMA_CALL_WAITING)
+
+TelephonyConnectionService: (createConnection, callManagerAccount:|Adding IMS connection to conference controller|Adding GSM connection to conference controller|Adding CDMA connection to conference controller|retryOutgoingOriginalConnection|Voice phoneId in)|(CdmaConnection|GsmConnection|TelephonyConnection): Update state from|MSG_CDMA_LINE_CONTROL_INFO_REC
+
+(TelephonyConnectionService:|QtiEmergencyCallHelper:|CdmaConnection:|GsmConnection:|TelephonyConnection:|\[GsmCdmaPhone\]|\[GsmCdmaCallTracker\]|\[GsmCdmaConn\]) 
+CdmaConferenceController: (recalculating conference calls|Creating new Cdma conference call|Adding connection to conference call|Removing connection from conference call|Adding the conference call|Destroying the CDMA conference connection)
+
+CallsManager: (addCall|makeRoomForOutgoingCall|setCallState)
+Call: setState|Adapter: disconnect call DisconnectCause
+
+dumpCurrentAccounts|Phone with subscription id|Registered phoneAccount:
+
+TelephonyConnectionService: (createConnection, callManagerAccount:|Adding IMS connection to conference controller|Adding GSM connection to conference controller|Adding CDMA connection to conference controller|retryOutgoingOriginalConnection|Voice phoneId in)|(CdmaConnection|GsmConnection|TelephonyConnection): Update state from|MSG_CDMA_LINE_CONTROL_INFO_REC|CdmaConferenceController: (recalculating conference calls|Creating new Cdma conference call|Adding connection to conference call|Removing connection from conference call|Adding the conference call|Destroying the CDMA conference connection)|\[([0-9]+|UNSL)\][<>] (DIAL|HANGUP|ANSWER|REQUEST_HOLD|REQUEST_RESUME|REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE|HANGUP_FOREGROUND_RESUME_BACKGROUND|RIL_REQUEST_CDMA_FLASH)|\[([0-9]+|UNSL)\]< (UNSOL_RESPONSE_CALL_STATE_CHANGED  |GET_CURRENT_CALLS|LAST_CALL_FAIL_CAUSE|UNSOL_CDMA_INFO_REC|UNSOL_SRVCC_STATE_NOTIFY|UNSOL_RINGBACK_TONE|UNSOL_RESPONSE_HANDOVER|UNSOL_CDMA_CALL_WAITING)|(TelephonyConnectionService:|QtiEmergencyCallHelper:|CdmaConnection:|GsmConnection:|TelephonyConnection:|\[GsmCdmaPhone\]|\[GsmCdmaCallTracker\]|\[GsmCdmaConn\]) 
+
+
+
+
+qcril_qmi_voice_send_current_ims_calls: 
+
+
+# APN
+\[([0-9]+|UNSL)\][<>] (RIL_REQUEST_SET_INITIAL_ATTACH_APN|SETUP_DATA_CALL)
+
+# CallWaiting
+\[([0-9]+|UNSL)\][<>] (REQUEST_QUERY_CALL_WAITING|REQUEST_SET_CALL_WAITING)
+
+# CT-VoLTE
+CdmaVolteServiceChecker: (updateStatewithSlotId, checking|shouldShowVolteAlert|startTimeOutCheck|stopTimeOutCheck|showAlertDialog|ok|cancel)
+
+=================================
+
+\[([0-9]+|UNSL)\]< (RIL_REQUEST_IMS_REGISTRATION_STATE)
+
+\[([0-9]+|UNSL)\]< \[ARICENT_IMS_INTEGRATION\]
+
+\[([0-9]+|UNSL)\][<>] (DTMF_START|DTMF_STOP)
+
+RIL_REQUEST_SET_RADIO_CAPABILITY
+
+UNSOL_SRV_STATUS_UPDATE
+
+------------------------------
+
+ActivityManager: ANR in
+
+------------------------------
+
+CallIntentProcessor: phoneAccountHandle from intent:
+
+ImsPhoneConnection:
+
+
+
+\[ImsPhoneCallTracker\] (processCallStateChange state|onCallUpdated|onCallProgressing)
+
+getCallForwardingOption|queryCallForward|getCommandException
+SimcardRelatedSettingActivity:
+GsmUmtsCallForwardOptions:
+CallForwardEditPreference:
+
+
+
+\[GsmCdmaPhone\] getCallForwardingOption|queryCallForward :: Ut|getCallForwardingOption reason|getCallForwardingIndicator from sharepreference: callForwardingIndicator
+updateCallWaiting :: Ut|handleGetCallWaitingResponse: |handleSetCallWaitingResponse: re get|setCallWaiting enable=
+
+REQUEST_GET_CLIR|GET_CLIR
+
+updateImsServiceConfigForSlot:|setAdvanced4GMode: turn(Off|On)Ims|\[ImsPhoneCallTracker\] handleFeatureCapabilityChanged: VoLTE|registrationConnected ::|registrationConnectedWithRadioTech :: imsRadioTech=|registrationDisconnected :: imsReasonInfo
+setCallForwardingIndicatorInSharedPref: Storing status|getCallForwardingIndicatorFromSharedPref: for subId|getCallForwardingIndicator from sharepreference: callForwardingIndicator
+------------------------------
+
+
+processEmcStatus|handleEmcActInfo|Dial To
+
+------------------------------
+
+ImsPhoneCallTracker-->ImsCall-->ImsCallSessionImpl-->ImsSenderRxy
+
+InCall  : DialpadPresenter - Processing dtmf key
+Telecom : Event: RecordEntry TC@6: START_DTMF, 1: ICA.pDT(InCall package: com.android.incallui)@AyI
+Telecom : Event: RecordEntry TC@6: STOP_DTMF, null: ICA.sDT(InCall package: com.android.incallui)@AyM
+ImsCall : startDtmf :: code=
+
+QCRIL_EVT_IMS_SOCKET_REQ_DTMF_START
+------------------------------
+
+
+
+QtiEmergencyCallHelper:
+
+
+
+
+
+
+
+
+ImsManager.setEnhanced4gLteModeSettingForSlot
+ImsManager.setAdvanced4GMode
+  ImsManager.setLteFeatureValues
+  ...
+  ImsConfigImpl.setFeatureValue
+
+ImsManager.addRegistrationListener
+
+
+setEnhanced4gLteModeSettingForSlot|setAdvanced4GMode|setLteFeatureValues
+
+
+
+
+
+
+
+
+

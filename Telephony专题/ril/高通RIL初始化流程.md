@@ -1,33 +1,44 @@
-# 高通RIL初始化流程
-@(Qcril)[高通][rild]
+# Qcril的基本机制
+@(Qcril)[高通|rild|Telephony]
 
-`Qcril`是高通平台`rild`的平台RIL，是连接Java Telephony Frameworks和Modem的中间传输层。
-rild是由C/C++编写的，在使用socket和HIDL等通信方式与其他模块通信。
+> **声明：**
+> **文中涉及高通平台精简后的部分源码，如有侵权，请联系作者删除**。
 
-由于我们主要是介绍Qcril，因此只对rild进行简要描述。
+`rild`是由C/C++编写的linux域后台进程，是连接Java Telephony Frameworks和Modem的中间传输层。
+
+`Qcril`是高通平台`rild`的平台RIL。
+
+## rild - RIL入口
+
+`rild`的入口函数`main`的主要流程如下，
 
 ```cpp
 //@rild.c
 
 int main(int argc, char **argv) {
     ...
-    //打开动态链接库 rilLibPath
+    //加载动态链接库 rilLibPath
     dlHandle = dlopen(rilLibPath, RTLD_NOW);
     ...
-    //获取Qcril初始化入口 RIL_Init
+    //获取入口 RIL_Init
     rilInit = (const RIL_RadioFunctions *(*)(const struct RIL_Env *, int, char **))
         dlsym(dlHandle, "RIL_Init");
     ...
     //调用 RIL_Init 完成模块初始化，并返回一个RIL_RadioFunctions结构体
     funcs = rilInit(&s_rilEnv, argc, rilArgv);
     ...
-    //将返回的结构体保存在本地
+    //将返回的结构体注册在本地
     RIL_register(funcs);
     ...
+    while (true) { //保证进程不退出
+        sleep(UINT32_MAX);
+    }
 }
 ```
 
-我们找到`s_rilEnv`的定义，这个结构体封装了一组方法，它们是用来在消息处理完成后被回调，向Java Telephony Frameworks返回请求结果的重要方法，具体用法放在参考[^s_rilEnv]
+在main函数中`rilLibPath`和`s_rilEnv`是值得关注的两个变量，前者代表高通提供的RIL实现方案（即Qcril动态链接库路径），后者代表一个`RIL_Env `结构体，包含了一组向Java Telephony Frameworks返回请求结果的函数。
+
+下面是`s_rilEnv`的定义和类型，
 
 ```cpp
 //@rild.c
@@ -66,27 +77,30 @@ struct RIL_Env {
 
 ## RIL_Init - 初始化
 
-我们找到对应的`RIL_Init`函数，
+`RIL_Init`函数将执行`android_ril_module`的初始化，此外将main函数传入的`s_rilEnv`赋值给本地变量`qcril_response_api`，同时将`qcril_request_api`返回给main函数完成注册操作。
+
+细心的朋友会发现，RIL_Init中使用了`client_id`，此变量的值由rild创建时传入的参数决定，其目的是建立SIM卡槽与RIL的绑定关系，通俗的将就是双卡设备的rild进程将创建两个qcril。
 
 ```cpp
 //@ril_api.cpp
 
 extern "C"const RIL_RadioFunctions * RIL_Init(const struct RIL_Env * env, int argc, char * *argv) {
     ...
-    //QCRIL_DEFAULT_INSTANCE_ID值为0，QCRIL_SECOND_INSTANCE_ID值为1
+    //QCRIL_DEFAULT_INSTANCE_ID值为0，QCRIL_SECOND_INSTANCE_ID值为1；
+    //qcril响应请求和主动上报的函数接口，与SIM卡槽对应
     qcril_response_api[QCRIL_DEFAULT_INSTANCE_ID] = (struct RIL_Env * ) env;
     qcril_response_api[QCRIL_SECOND_INSTANCE_ID] = (struct RIL_Env * ) env;
     ...
 
-    //执行android_ril_module的ril_init
+    //执行android_ril_module的ril_init，它将指引我们进入qcril初始化流程
     get_android_ril_module().ril_init(instance_id, env, argc, c_argv);
 
-    //返回qcril_request_api
+    //qcril处理请求的函数接口
     return & qcril_request_api[QCRIL_DEFAULT_INSTANCE_ID];
 } /* RIL_Init() */
 ```
 
-我们先看下`qcril_response_api`和`qcril_request_api`的定义。原来两者都是定义为数组，区别是前者需要rild传入参数进行赋值（就是文章开头说的那个`s_rilEnv`），后者则是内置的。这样设计是比较容易理解的，RilRequst的处理是在内部，而如何将处理结果传送回Java层由外部方法来处理。
+这里只看下`qcril_response_api`和`qcril_request_api`的定义，如何使用的这些函数接口将在后文介绍。
 
 ```cpp
 //@ril_api.cpp
@@ -105,7 +119,8 @@ static const RIL_RadioFunctions qcril_request_api[] = {
 };
 ```
 
-接下来是`ril_init`，首先需要弄清楚到底是谁在调用这个函数。我们找到`get_android_ril_module`定义的地方，
+
+接下来看`get_android_ril_module().ril_init(...)`，我们找到`get_android_ril_module()`的返回值的是`the_module.get_module()`，我们先弄清楚`the_module`是啥。
 
 ```cpp
 //@Android_ril_module.cpp
@@ -118,7 +133,7 @@ android_ril_module &get_android_ril_module() {
 }
 ```
 
- `load_module`看上去是一个模板，
+ 首先，`load_module`是一个C++模板，其定义如下，
 
 ```cpp
 //@Module.h
@@ -137,7 +152,7 @@ class load_module
 };
 ```
 
-由此可得出`the_module`的类型是`load_module`，其定义形式应该是下面这样：
+将`android_ril_module`代入进去，就得到了`the_module`的类型：
 
 ```cpp
 class load_module
@@ -153,9 +168,9 @@ class load_module
 };
 ```
 
-所以`get_android_ril_module()`返回值其实是定义在局部变量`the_module`的`get_module`函数中全局变量`module`，其类型为`android_ril_module`。
+所以`the_module`得类型是`load_module`，调用`get_module()`返回的是函数中类型为`android_ril_module`的全局变量`module`。
 
-因此`get_android_ril_module().ril_init(instance_id, env, argc, c_argv);`的真实形式是`android_ril_module`中定义的`ril_init`。
+因此，`get_android_ril_module().ril_init(...)`其实就是是调用`android_ril_module`中定义的`ril_init`。
 
 ```cpp
 //@Android_ril_module.cpp
